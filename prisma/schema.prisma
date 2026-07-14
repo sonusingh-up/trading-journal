@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  username      String
+  password_hash String
+  sessions      Session[]
+  accounts      Account[]
+  income        IncomeStream[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@map("sessions")
+}
+
+model Account {
+  id                 String   @id @default(cuid())
+  user_id            String
+  user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  account_name       String
+  starting_balance   Float
+  current_balance    Float
+  target_profit      Float
+  max_daily_drawdown Float
+  trades             Trade[]
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Account names are unique per user, not globally.
+  @@unique([user_id, account_name])
+  @@map("accounts")
+}
+
+model IncomeStream {
+  id          String   @id @default(cuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  // e.g. "Affiliate Revenue", "PR Retainers", "Prop Firm Payouts"
+  source_name String
+  amount      Float
+  date        DateTime @default(now())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([user_id, source_name])
+  @@map("income_streams")
+}
+
+model Trade {
+  id           String    @id @default(cuid())
+  user_id      String
+  pair         String
+  // SQLite has no enum support: "BUY" | "SELL"
+  side         String
+  entry_price  Float
+  // null exit_price/net_pnl = position still open
+  exit_price   Float?
+  net_pnl      Float?
+  // e.g. "/uploads/<uuid>.png" — chart screenshot attached when logging
+  screenshot_url String?
+  date         DateTime  @default(now())
+  account_name String
+  account      Account   @relation(fields: [user_id, account_name], references: [user_id, account_name], onDelete: Cascade)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@index([user_id, account_name])
+  @@map("trades")
+}

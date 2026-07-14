@@ -25,6 +25,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { SiteHeader } from "@/components/site-header";
 import { sourceSlug, type MonthlyIncomeRow } from "@/lib/income";
 import { currency } from "@/lib/format";
+import type { IncomeStream } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function CashFlowPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const entries = await prisma.incomeStream.findMany({
+  const entries: IncomeStream[] = await prisma.incomeStream.findMany({
     where: { user_id: user.id },
     orderBy: { date: "asc" },
   });

@@ -25,7 +25,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { SiteHeader } from "@/components/site-header";
 import { sourceSlug, type MonthlyIncomeRow } from "@/lib/income";
 import { currency } from "@/lib/format";
-import type { IncomeStream } from "@prisma/client";
+import type { IncomeStream } from "@/lib/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 

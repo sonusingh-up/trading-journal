@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { createSession, publicUser, verifyPassword } from "@/lib/auth";
+import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const limited = rateLimit(`login:${clientIp(request)}`, 10, 15 * 60_000);
+  if (!limited.ok) return tooManyRequests(limited.retryAfterSec);
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

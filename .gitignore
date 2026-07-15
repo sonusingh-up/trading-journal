@@ -46,5 +46,5 @@ next-env.d.ts
 *.db
 *.db-journal
 
-# user-uploaded trade screenshots
-/public/uploads/
+# user-uploaded trade screenshots (private dir, served via /api/files)
+/uploads/

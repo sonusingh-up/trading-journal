@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trade Journal
 
-## Getting Started
+A clean, modern trading journal for prop-firm and personal accounts — log trades,
+track profit targets and daily drawdown limits, size positions, and see where your
+money actually comes from. Light fintech aesthetic (soft blue gradients, Plus
+Jakarta Sans, rounded cards), runs entirely on your machine with a local SQLite
+database.
 
-First, run the development server:
+## Features
+
+- **Dashboard** — total balance hero, win rate / profit factor / avg W:L tiles,
+  personal profit-target progress, per-account cards with MTD change, a
+  filterable recent-trades list (All / Wins / Losses), an equity curve, and an
+  interactive daily P&L calendar heatmap.
+- **Trade logging** — modal with account/side/pair/prices, optional chart
+  screenshot attachment, and a built-in **position size calculator**
+  (balance × risk% ÷ stop-loss pips) that prefills from the selected account.
+- **Risk guardrails** — each account has a strict daily drawdown limit; a
+  high-visibility banner warns at 70% of the day's loss budget and flags a
+  breach at 100%.
+- **Cash Flow** — log business income (affiliate revenue, retainers, prop-firm
+  payouts, anything) and compare streams month-by-month in a grouped bar chart.
+- **Multi-user** — email/password accounts (bcrypt + DB-backed sessions), fully
+  isolated data per user, rate-limited auth endpoints, owner-only access to
+  uploaded screenshots.
+- **Polish** — skeleton loading states, zero-states, framer-motion page and
+  card transitions.
+
+## Stack
+
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 ·
+shadcn/ui · Recharts · framer-motion · Prisma 7 + SQLite (better-sqlite3 driver)
+
+## Getting started
 
 ```bash
+git clone https://github.com/sonusingh-up/trading-journal.git
+cd trading-journal
+npm install
+cp .env.example .env      # Windows: copy .env.example .env
+npx prisma migrate dev    # creates dev.db and applies migrations
+npx prisma db seed        # optional: demo user + sample data
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and sign in — or create your own account from the
+login page.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Demo login (from the seed):** `demo@tradejournal.local` / `demo1234`
+Don't run the seed against a database you care about: it wipes existing rows.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API
 
-## Learn More
+All data routes require a session cookie (sign in first) and only ever return
+the signed-in user's rows.
 
-To learn more about Next.js, take a look at the following resources:
+| Route | Methods | Notes |
+|---|---|---|
+| `/api/auth/register` | POST | email, password (min 8), optional username |
+| `/api/auth/login` · `/api/auth/logout` | POST | rate-limited per IP |
+| `/api/accounts` | GET, POST | trading accounts with targets + drawdown limits |
+| `/api/trades` | GET, POST | `?account=` filter; POST returns a `daily_drawdown` status and updates the account balance for closed trades |
+| `/api/income` | GET, POST | `?source=` filter |
+| `/api/uploads` | POST | multipart image ≤ 5 MB → private file URL |
+| `/api/files/[name]` | GET | serves uploads, owner-only |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- SQLite lives in a local file (`dev.db`) and screenshots in `uploads/` — deploy
+  to something with a **persistent disk** (a VPS, Railway, Fly.io, a home
+  server). Serverless platforms without durable storage won't work as-is.
+- `npm run build && npm start` for production.
+- The rate limiter is in-memory (single instance). Behind a proxy, make sure
+  `x-forwarded-for` is set so limits apply per client, not per proxy.
+- Money is stored as floats — fine for journaling, but switch to integer cents
+  before using balances for anything accounting-grade.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE)

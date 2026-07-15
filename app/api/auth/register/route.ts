@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { createSession, hashPassword, publicUser } from "@/lib/auth";
+import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
+  const limited = rateLimit(`register:${clientIp(request)}`, 5, 60 * 60_000);
+  if (!limited.ok) return tooManyRequests(limited.retryAfterSec);
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

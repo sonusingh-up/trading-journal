@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     screenshot_url !== undefined &&
     screenshot_url !== null &&
     (typeof screenshot_url !== "string" ||
-      !screenshot_url.startsWith("/uploads/"))
+      !screenshot_url.startsWith("/api/files/"))
   ) {
     return Response.json(
       { error: "screenshot_url must be a path returned by POST /api/uploads." },

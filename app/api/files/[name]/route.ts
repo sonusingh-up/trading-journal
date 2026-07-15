@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { uploadsDir } from "@/lib/storage";
 
 const MIME: Record<string, string> = {
   png: "image/png",
@@ -34,7 +35,7 @@ export async function GET(
   }
 
   try {
-    const data = await readFile(path.join(process.cwd(), "uploads", name));
+    const data = await readFile(path.join(uploadsDir(), name));
     return new Response(new Uint8Array(data), {
       headers: {
         "Content-Type": MIME[name.split(".").pop()!],

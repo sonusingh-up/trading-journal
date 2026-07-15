@@ -67,9 +67,25 @@ the signed-in user's rows.
 ## Deployment notes
 
 - SQLite lives in a local file (`dev.db`) and screenshots in `uploads/` — deploy
-  to something with a **persistent disk** (a VPS, Railway, Fly.io, a home
-  server). Serverless platforms without durable storage won't work as-is.
-- `npm run build && npm start` for production.
+  to something with a **persistent disk** (a VPS, Railway, Fly.io, Render, a
+  home server). Serverless platforms without durable storage won't work as-is.
+- `npm run build && npm start` for production. Migrations don't run
+  automatically — run `npx prisma migrate deploy` on release (simplest: make
+  your start command `npx prisma migrate deploy && npm start`).
+
+### Render
+
+1. Web Service from this repo. Build command: `npm install && npm run build`
+   (the `postinstall` script generates the Prisma client).
+2. Start command: `npx prisma migrate deploy && npm start` — creates/updates
+   the database tables on every boot.
+3. Attach a **persistent disk** (e.g. mounted at `/var/data`) and set the env
+   vars `DATABASE_URL=file:/var/data/dev.db` and `UPLOADS_DIR=/var/data/uploads`.
+   Without a disk (free tier), the filesystem resets on every deploy and
+   restart — **all users, trades and screenshots are lost each time**.
+
+### Other notes
+
 - The rate limiter is in-memory (single instance). Behind a proxy, make sure
   `x-forwarded-for` is set so limits apply per client, not per proxy.
 - Money is stored as floats — fine for journaling, but switch to integer cents

@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { uploadsDir } from "@/lib/storage";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
   const name = `${crypto.randomUUID()}.${ext}`;
   // Private directory (gitignored, outside public/) — files are only served
   // through GET /api/files/[name], which checks session + ownership.
-  const dir = path.join(process.cwd(), "uploads");
+  const dir = uploadsDir();
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
   await prisma.upload.create({ data: { name, user_id: user.id } });
